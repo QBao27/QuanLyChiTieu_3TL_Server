@@ -21,9 +21,6 @@ public partial class QuanLyChiTieu3tlContext : DbContext
 
     public virtual DbSet<TaiKhoan> TaiKhoans { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=LAPTOP-VC5IF5QK;Initial Catalog=QuanLyChiTieu_3TL;Integrated Security=True;Trust Server Certificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +41,7 @@ public partial class QuanLyChiTieu3tlContext : DbContext
 
             entity.ToTable("GiaoDich");
 
+            entity.Property(e => e.Color).HasMaxLength(50);
             entity.Property(e => e.LoaiGiaoDich).HasMaxLength(10);
             entity.Property(e => e.MoTa).HasMaxLength(255);
             entity.Property(e => e.SoTien).HasColumnType("decimal(18, 2)");
