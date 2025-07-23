@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChiTieu_3TL.Data;
+using QuanLyChiTieu_3TL.Models;
+
 
 namespace QuanLyChiTieu_3TL.Controllers
 {
@@ -19,23 +21,47 @@ namespace QuanLyChiTieu_3TL.Controllers
         {
             return View();
         }
+        //[HttpGet("by-tai-khoan/{idTaiKhoan}")]
+        //public async Task<IActionResult> GetByTaiKhoan(int idTaiKhoan)
+        //{
+        //    var giaoDiches = await _context.GiaoDiches
+        //        .Where(g => g.IdTaiKhoan == idTaiKhoan)
+        //        .Select(g => new {
+        //            g.Id,
+        //            g.SoTien,
+        //            g.LoaiGiaoDich,
+        //            NgayGiaoDich = g.NgayGiaoDich.ToString("yyyy-MM-dd"),
+        //            g.MoTa,
+        //            IdDanhMuc = g.IdDanhMuc,
+        //            IdTaiKhoan = g.IdTaiKhoan
+        //        })
+        //        .ToListAsync();
+
+        //    return Ok(giaoDiches);
+        //}
+
         [HttpGet("by-tai-khoan/{idTaiKhoan}")]
         public async Task<IActionResult> GetByTaiKhoan(int idTaiKhoan)
         {
-            var giaoDiches = await _context.GiaoDiches
+            var giaoDichs = await _context.GiaoDiches
                 .Where(g => g.IdTaiKhoan == idTaiKhoan)
-                .Select(g => new {
-                    g.Id,
-                    g.SoTien,
-                    g.LoaiGiaoDich,
+                .Include(g => g.IdDanhMucNavigation) // Nếu cần tên DanhMuc
+                .Select(g => new GiaoDichDTO
+                {
+                    Id = g.Id,
+                    SoTien = g.SoTien,
+                    LoaiGiaoDich = g.LoaiGiaoDich,
                     NgayGiaoDich = g.NgayGiaoDich.ToString("yyyy-MM-dd"),
-                    g.MoTa,
+                    MoTa = g.MoTa,
                     IdDanhMuc = g.IdDanhMuc,
-                    IdTaiKhoan = g.IdTaiKhoan
+                    IdTaiKhoan = g.IdTaiKhoan,
+                    Color = g.Color,
+                    TenDanhMuc = g.IdDanhMucNavigation.TenDanhMuc, // Giả sử có cột TenDanhMuc
+                    Icon = g.IdDanhMucNavigation.Icon // Nếu trong DanhMuc có cột Icon
                 })
                 .ToListAsync();
 
-            return Ok(giaoDiches);
+            return Ok(giaoDichs);
         }
 
     }
