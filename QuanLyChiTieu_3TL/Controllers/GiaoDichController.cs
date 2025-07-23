@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChiTieu_3TL.Data;
+using QuanLyChiTieu_3TL.Models;
 using System.Globalization;
 
 namespace QuanLyChiTieu_3TL.Controllers
@@ -51,7 +52,7 @@ namespace QuanLyChiTieu_3TL.Controllers
 
             // Tính summary
             var totalIncome = all
-        .Where(g => g.LoaiGiaoDich.ToLower() == "thu" && g.NgayGiaoDich.Month == m && g.NgayGiaoDich.Year == y)
+        .Where(g => g.LoaiGiaoDich.ToLower() == "thu")
         .Sum(g => g.SoTien);
 
             var totalExpense = all
@@ -61,21 +62,23 @@ namespace QuanLyChiTieu_3TL.Controllers
 
             // (Option) Group theo ngày
             var grouped = all
-                .GroupBy(g => g.NgayGiaoDich)
-                .OrderByDescending(g => g.Key)
-                .Select(g => new {
-                    date = g.Key.ToString("yyyy-MM-dd"),
-                    weekday = g.Key.ToString("dddd", new CultureInfo("vi-VN")),
-                    items = g.Select(x => new {
-                        x.Id,
-                        soTien = x.SoTien,
-                        loai = x.LoaiGiaoDich,
-                        moTa = x.MoTa,
-                        icon = x.IdDanhMucNavigation.Icon,
-                        color = x.Color,
-                        tenDanhMuc = x.IdDanhMucNavigation.TenDanhMuc
-                    })
-                });
+     .GroupBy(g => g.NgayGiaoDich)
+     .OrderByDescending(g => g.Key) // sắp xếp các ngày giảm dần
+     .Select(g => new {
+         date = g.Key.ToString("yyyy-MM-dd"),
+         weekday = g.Key.ToString("dddd", new CultureInfo("vi-VN")),
+         items = g.OrderByDescending(x => x.Id) // sắp xếp giao dịch trong ngày giảm dần
+                   .Select(x => new {
+                       x.Id,
+                       soTien = x.SoTien,
+                       loai = x.LoaiGiaoDich,
+                       moTa = x.MoTa,
+                       icon = x.IdDanhMucNavigation.Icon,
+                       color = x.Color,
+                       tenDanhMuc = x.IdDanhMucNavigation.TenDanhMuc
+                   })
+     });
+
 
             return Ok(new
             {
@@ -90,61 +93,41 @@ namespace QuanLyChiTieu_3TL.Controllers
         }
 
 
+        // 3. POST: Tạo giao dịch mới
+        // URL: /api/GiaoDich
+        [HttpPost("by-tai-khoan/{idTaiKhoan}")]
+        public async Task<IActionResult> ThemGiaoDich(int idTaiKhoan, [FromBody] thongTinGiaoDich dto)
+        {
+            try
+            {
+                if (dto == null)
+                    return BadRequest("Thông tin không hợp lệ");
 
+                if (dto.SoTien <= 0)
+                    return BadRequest("Số tiền phải lớn hơn 0");
 
-        //// 2. GET: Lấy chi tiết một giao dịch theo ID
-        //// URL: /api/GiaoDich/{id}
-        //[HttpGet("{id}")]
-        //public async Task<IActionResult> GetGiaoDich(int id)
-        //{
-        //    var giaoDich = await _context.GiaoDiches
-        //        .Include(g => g.DanhMuc)
-        //        .FirstOrDefaultAsync(g => g.Id == id);
+                var giaoDich = new GiaoDich
+                {
+                    IdTaiKhoan = idTaiKhoan,
+                    LoaiGiaoDich = dto.LoaiGiaoDich.ToLower(),
+                    SoTien = dto.SoTien,
+                    NgayGiaoDich = dto.NgayGiaoDich,
+                    MoTa = dto.MoTa,
+                    IdDanhMuc = dto.IdDanhMuc,
+                    Color = dto.Color,
+                };
 
-        //    if (giaoDich == null)
-        //    {
-        //        return NotFound(new { message = "Không tìm thấy giao dịch." });
-        //    }
+                _context.GiaoDiches.Add(giaoDich);
+                await _context.SaveChangesAsync();
 
-        //    return Ok(new
-        //    {
-        //        giaoDich.Id,
-        //        giaoDich.SoTien,
-        //        giaoDich.LoaiGiaoDich,
-        //        NgayGiaoDich = giaoDich.NgayGiaoDich.ToString("yyyy-MM-dd"),
-        //        giaoDich.MoTa,
-        //        IdDanhMuc = giaoDich.IdDanhMuc,
-        //        TenDanhMuc = giaoDich.DanhMuc.TenDanhMuc,
-        //        IconDanhMuc = giaoDich.DanhMuc.Icon,
-        //        IdTaiKhoan = giaoDich.IdTaiKhoan
-        //    });
-        //}
+                return Ok(giaoDich); // ✅ Trả về 200 OK kèm object mới tạo
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi server: {ex.Message}"); // ✅ Trả lỗi rõ ràng hơn
+            }
+        }
 
-        //// 3. POST: Tạo giao dịch mới
-        //// URL: /api/GiaoDich
-        //[HttpPost]
-        //public async Task<IActionResult> CreateGiaoDich([FromBody] GiaoDich giaoDich)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    // Có thể thêm kiểm tra IdDanhMuc và IdTaiKhoan tồn tại ở đây
-        //    var danhMucExists = await _context.DanhMucs.AnyAsync(d => d.Id == giaoDich.IdDanhMuc);
-        //    var taiKhoanExists = await _context.TaiKhoans.AnyAsync(tk => tk.Id == giaoDich.IdTaiKhoan);
-
-        //    if (!danhMucExists || !taiKhoanExists)
-        //    {
-        //        return BadRequest(new { message = "IdDanhMuc hoặc IdTaiKhoan không hợp lệ." });
-        //    }
-
-        //    _context.GiaoDiches.Add(giaoDich);
-        //    await _context.SaveChangesAsync();
-
-        //    // Trả về giao dịch vừa tạo với Id mới
-        //    return CreatedAtAction(nameof(GetGiaoDich), new { id = giaoDich.Id }, giaoDich);
-        //}
 
         //// 4. PUT: Cập nhật giao dịch
         //// URL: /api/GiaoDich/{id}
@@ -203,27 +186,28 @@ namespace QuanLyChiTieu_3TL.Controllers
         //    return NoContent(); // Trả về 204 No Content nếu cập nhật thành công
         //}
 
-        //// 5. DELETE: Xóa giao dịch
-        //// URL: /api/GiaoDich/{id}
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteGiaoDich(int id)
-        //{
-        //    var giaoDich = await _context.GiaoDiches.FindAsync(id);
-        //    if (giaoDich == null)
-        //    {
-        //        return NotFound(new { message = "Không tìm thấy giao dịch để xóa." });
-        //    }
+        // 5. DELETE: Xóa giao dịch
+        // URL: /api/GiaoDich/{id}
 
-        //    _context.GiaoDiches.Remove(giaoDich);
-        //    await _context.SaveChangesAsync();
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteGiaoDich(int id)
+        {
+            var giaoDich = await _context.GiaoDiches.FindAsync(id);
+            if (giaoDich == null)
+            {
+                return NotFound(new { message = "Không tìm thấy giao dịch để xóa." });
+            }
 
-        //    return NoContent(); // Trả về 204 No Content nếu xóa thành công
-        //}
+            _context.GiaoDiches.Remove(giaoDich);
+            await _context.SaveChangesAsync();
 
-        //private async Task<bool> GiaoDichExists(int id)
-        //{
-        //    return await _context.GiaoDiches.AnyAsync(e => e.Id == id);
-        //}
+            return Ok(); // Trả về 204 No Content nếu xóa thành công
+        }
+
+        private async Task<bool> GiaoDichExists(int id)
+        {
+            return await _context.GiaoDiches.AnyAsync(e => e.Id == id);
+        }
     }
 }
 
