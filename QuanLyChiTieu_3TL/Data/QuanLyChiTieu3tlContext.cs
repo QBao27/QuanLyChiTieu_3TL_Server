@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-
+using QuanLyChiTieu_3TL.Models;
 namespace QuanLyChiTieu_3TL.Data;
 
 public partial class QuanLyChiTieu3tlContext : DbContext
@@ -20,6 +20,8 @@ public partial class QuanLyChiTieu3tlContext : DbContext
     public virtual DbSet<GiaoDich> GiaoDiches { get; set; }
 
     public virtual DbSet<TaiKhoan> TaiKhoans { get; set; }
+
+    public DbSet<user> users { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
