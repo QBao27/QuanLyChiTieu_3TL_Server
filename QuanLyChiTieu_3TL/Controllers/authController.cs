@@ -23,26 +23,23 @@ namespace TestServer.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] QuanLyChiTieu_3TL.Models.LoginRequest req)
         {
-            // 1. Tìm user theo email hoặc số điện thoại
             var user = await _context.TaiKhoans
                 .SingleOrDefaultAsync(u => u.Email == req.Email || u.Phone == req.Email);
 
             if (user == null)
                 return Unauthorized(new { message = "Email hoặc mật khẩu không đúng." });
 
-            // 2. Hash mật khẩu client gửi lên
-            var hashed = HashPassword(req.MatKhau);
-            if (user.MatKhau != hashed)
+            // ✅ So sánh mật khẩu bằng BCrypt
+            bool isValid = BCrypt.Net.BCrypt.Verify(req.MatKhau, user.MatKhau);
+            if (!isValid)
                 return Unauthorized(new { message = "Email hoặc mật khẩu không đúng." });
 
-            // 3. Trả về thông tin
             return Ok(new
             {
                 id = user.Id,
                 hoTen = user.HoTen,
                 email = user.Email,
                 phone = user.Phone
-                // Có thể thêm token nếu cần: token = GenerateJwt(user)
             });
         }
 

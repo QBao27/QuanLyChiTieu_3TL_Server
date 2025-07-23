@@ -1,4 +1,4 @@
-namespace QuanLyChiTieu_3TL.Models
+﻿namespace QuanLyChiTieu_3TL.Models
 {
     public class ErrorViewModel
     {
