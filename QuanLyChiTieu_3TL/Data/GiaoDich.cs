@@ -19,6 +19,8 @@ public partial class GiaoDich
 
     public int IdTaiKhoan { get; set; }
 
+    public string? Color { get; set; }
+
     public virtual DanhMuc IdDanhMucNavigation { get; set; } = null!;
 
     public virtual TaiKhoan IdTaiKhoanNavigation { get; set; } = null!;

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using QuanLyChiTieu_3TL.Models;
 using System.Diagnostics;
 
@@ -28,5 +29,7 @@ namespace QuanLyChiTieu_3TL.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+
     }
 }
