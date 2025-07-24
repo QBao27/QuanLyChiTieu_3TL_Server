@@ -2,7 +2,6 @@
 using QuanLyChiTieu_3TL.Data;
 using QuanLyChiTieu_3TL.Models;
 using Microsoft.EntityFrameworkCore;
-using QuanLyChiTieu_3TL.DTOs;
 using Microsoft.AspNetCore.Identity.Data;
 using System;
 using System.Text;
@@ -24,12 +23,11 @@ namespace TestServer.Controllers
         public async Task<IActionResult> Login([FromBody] QuanLyChiTieu_3TL.Models.LoginRequest req)
         {
             var user = await _context.TaiKhoans
-                .SingleOrDefaultAsync(u => u.Email == req.Email || u.Phone == req.Email);
+                .SingleOrDefaultAsync(u => u.Email == req.EmailOrPhone || u.Phone == req.EmailOrPhone);
 
             if (user == null)
                 return Unauthorized(new { message = "Email hoặc mật khẩu không đúng." });
 
-            // ✅ So sánh mật khẩu bằng BCrypt
             bool isValid = BCrypt.Net.BCrypt.Verify(req.MatKhau, user.MatKhau);
             if (!isValid)
                 return Unauthorized(new { message = "Email hoặc mật khẩu không đúng." });
@@ -42,6 +40,7 @@ namespace TestServer.Controllers
                 phone = user.Phone
             });
         }
+
 
 
         // (Giữ nguyên) Hàm hash SHA256
