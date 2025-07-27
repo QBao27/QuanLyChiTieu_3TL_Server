@@ -50,29 +50,43 @@ namespace TestServer.Controllers
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(plain));
             return Convert.ToHexString(bytes);
         }
+
+        //API đổi mật khẩu
+        [HttpPut("change-password/{id}")]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest req)
+        {
+            var user = await _context.TaiKhoans.FindAsync(id);
+            if (user == null)
+            {
+                Console.WriteLine($"❌ Không tìm thấy người dùng với ID: {id}");
+                return NotFound(new { message = "Không tìm thấy người dùng." });
+            }
+
+            // So sánh mật khẩu cũ
+            bool isOldPasswordCorrect = BCrypt.Net.BCrypt.Verify(req.OldPassword, user.MatKhau);
+            if (!isOldPasswordCorrect)
+            {
+                Console.WriteLine($"❌ Mật khẩu cũ không đúng cho ID: {id}");
+                return BadRequest(new { message = "Mật khẩu cũ không đúng." });
+            }
+
+            // Hash mật khẩu mới
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+            Console.WriteLine($"🔐 Đổi mật khẩu cho ID: {id}");
+            Console.WriteLine($"👉 Mật khẩu mới (gốc): {req.NewPassword}");
+            Console.WriteLine($"✅ Mật khẩu sau khi hash: {hashedPassword}");
+
+            user.MatKhau = hashedPassword;
+            await _context.SaveChangesAsync();
+
+            Console.WriteLine("✅ Đổi mật khẩu thành công!");
+
+            return Ok(new { message = "Đổi mật khẩu thành công." });
+        }
     }
+
 }
 
-        
-  
 
-        //[HttpPost("login")]
-        //public IActionResult Login([FromBody] QuanLyChiTieu_3TL.DTOs.LoginRequest request)
-        //{
-        //    var user = _context.users.FirstOrDefault(u => u.Email == request.Email);
-        //    if (user == null)
-        //        return Unauthorized("Tài khoảng không tồn tại");
-
-        //    if (user.Password != request.Password)
-        //        return Unauthorized("Sai mật khẩu");
-
-        //    return Ok("Đăng nhập thành công");
-        //}
-
-        //[HttpPost("logout")]
-        //public IActionResult Logout()
-        //{
-        //    // Chỉ đơn giản phản hồi thành công, client sẽ xóa token ở phía Flutter
-        //    return Ok(new { message = "Đăng xuất thành công" });
-        //}
+       
    
