@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyChiTieu_3TL.Data;
 using QuanLyChiTieu_3TL.Models;
 using System.Globalization;
+using System.Reflection.Metadata;
 
 namespace QuanLyChiTieu_3TL.Controllers
 {
@@ -129,65 +130,41 @@ namespace QuanLyChiTieu_3TL.Controllers
         }
 
 
-        //// 4. PUT: Cập nhật giao dịch
-        //// URL: /api/GiaoDich/{id}
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> UpdateGiaoDich(int id, [FromBody] GiaoDich giaoDich)
-        //{
-        //    if (id != giaoDich.Id)
-        //    {
-        //        return BadRequest(new { message = "ID giao dịch không khớp." });
-        //    }
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    var existingGiaoDich = await _context.GiaoDiches.FindAsync(id);
-        //    if (existingGiaoDich == null)
-        //    {
-        //        return NotFound(new { message = "Không tìm thấy giao dịch để cập nhật." });
-        //    }
-
-        //    // Có thể thêm kiểm tra IdDanhMuc và IdTaiKhoan tồn tại ở đây
-        //    var danhMucExists = await _context.DanhMucs.AnyAsync(d => d.Id == giaoDich.IdDanhMuc);
-        //    var taiKhoanExists = await _context.TaiKhoans.AnyAsync(tk => tk.Id == giaoDich.IdTaiKhoan);
-
-        //    if (!danhMucExists || !taiKhoanExists)
-        //    {
-        //        return BadRequest(new { message = "IdDanhMuc hoặc IdTaiKhoan không hợp lệ." });
-        //    }
-
-        //    // Cập nhật các trường dữ liệu
-        //    existingGiaoDich.SoTien = giaoDich.SoTien;
-        //    existingGiaoDich.LoaiGiaoDich = giaoDich.LoaiGiaoDich;
-        //    existingGiaoDich.NgayGiaoDich = giaoDich.NgayGiaoDich;
-        //    existingGiaoDich.MoTa = giaoDich.MoTa;
-        //    existingGiaoDich.IdDanhMuc = giaoDich.IdDanhMuc;
-        //    existingGiaoDich.IdTaiKhoan = giaoDich.IdTaiKhoan;
-
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!await GiaoDichExists(id))
-        //        {
-        //            return NotFound(new { message = "Giao dịch không tồn tại." });
-        //        }
-        //        else
-        //        {
-        //            throw; // Ném lỗi nếu có vấn đề khác
-        //        }
-        //    }
-
-        //    return NoContent(); // Trả về 204 No Content nếu cập nhật thành công
-        //}
-
-        // 5. DELETE: Xóa giao dịch
+        // 4. PUT: Cập nhật giao dịch
         // URL: /api/GiaoDich/{id}
+        [HttpPut("by-id-update/{id}")]
+        public async Task<IActionResult> CapNhatGiaoDich(int id, [FromBody] thongTinUpdate dto)
+        {
+            try
+            {
+                Console.WriteLine($"❌ ID = {id} và số tiền {dto.SoTien} va mo ta {dto.MoTa}");
+                if (dto.SoTien <= 0)
+                    return BadRequest("Số tiền phải lớn hơn 0.");
+
+                var giaoDich = await _context.GiaoDiches.FindAsync(id);
+                if (giaoDich == null)
+                {
+                    Console.WriteLine($"❌ Không tìm thấy giao dịch với ID = {id} và số tiền {dto.SoTien}");
+                    return NotFound("Không tìm thấy giao dịch.");
+                }
+
+                // ✅ Luôn cập nhật, không cần kiểm tra có thay đổi hay không
+                giaoDich.SoTien = dto.SoTien;
+                giaoDich.MoTa = dto.MoTa;
+
+                await _context.SaveChangesAsync();
+                return Ok(giaoDich); // ✅ Trả về giao dịch đã cập nhật
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi server: {ex.Message}");
+            }
+        }
+
+
+
+        //5. DELETE: Xóa giao dịch
+        //URL: /api/GiaoDich/{id}
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGiaoDich(int id)
