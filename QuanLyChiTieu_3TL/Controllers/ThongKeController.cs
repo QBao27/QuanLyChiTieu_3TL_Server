@@ -35,9 +35,10 @@ namespace QuanLyChiTieu_3TL.Controllers
         //            IdDanhMuc = g.IdDanhMuc,
         //            IdTaiKhoan = g.IdTaiKhoan
         //        })
-        //        .ToListAsync();
+        //        .ToListAsync(); aa
 
         //    return Ok(giaoDiches);
+       
         //}
 
         [HttpGet("by-tai-khoan/{idTaiKhoan}")]
